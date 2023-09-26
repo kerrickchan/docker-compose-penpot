@@ -1,5 +1,6 @@
----
 version: "3.5"
+
+name: "penpot"
 
 networks:
   penpot:
@@ -36,7 +37,7 @@ services:
   #     - "443:443"
 
   penpot-frontend:
-    image: "penpotapp/frontend:latest"
+    image: "penpotapp/frontend:1.19.3"
     ports:
       - 9001:80
 
@@ -96,7 +97,7 @@ services:
       - PENPOT_FLAGS=disable-registration enable-login-with-password
 
   penpot-backend:
-    image: "penpotapp/backend:latest"
+    image: "penpotapp/backend:1.19.3"
 
     volumes:
       - penpot_assets:/opt/data/assets
