@@ -1,13 +1,11 @@
+---
 version: "3.5"
-
-name: "penpot"
 
 networks:
   penpot:
 
 volumes:
-  penpot_postgres_v15:
-  penpot_redis:
+  penpot_postgres_data:
   penpot_assets:
   # penpot_traefik:
   # penpot_minio:
@@ -37,7 +35,8 @@ services:
   #     - "443:443"
 
   penpot-frontend:
-    image: "penpotapp/frontend:1.19.3"
+    image: "penpotapp/frontend:latest"
+    restart: unless-stopped
     ports:
       - 9001:80
 
@@ -94,10 +93,11 @@ services:
       ## You can read more about all available flags on:
       ## https://help.penpot.app/technical-guide/configuration/#advanced-configuration
 
-      - PENPOT_FLAGS=disable-registration enable-login-with-password
+      - PENPOT_FLAGS=disable-registration disable-login-with-password
 
   penpot-backend:
-    image: "penpotapp/backend:1.19.3"
+    image: "penpotapp/backend:latest"
+    restart: unless-stopped
 
     volumes:
       - penpot_assets:/opt/data/assets
@@ -137,7 +137,7 @@ services:
       ## environment variables for the backend here:
       ## https://help.penpot.app/technical-guide/configuration/#advanced-configuration
 
-      - PENPOT_FLAGS=disable-registration enable-login-with-password disable-email-verification disable-smtp enable-prepl-server enable-insecure-register disable-secure-session-cookies
+      - PENPOT_FLAGS=disable-registration disable-login-with-password disable-email-verification disable-smtp enable-prepl-server enable-insecure-register disable-secure-session-cookies
 
       ## Penpot SECRET KEY. It serves as a master key from which other keys for subsystems
       ## (eg http sessions, or invitations) are derived.
@@ -217,6 +217,7 @@ services:
 
   penpot-exporter:
     image: "penpotapp/exporter:latest"
+    restart: unless-stopped
     networks:
       - penpot
 
@@ -229,11 +230,12 @@ services:
       - PENPOT_REDIS_URI=redis://penpot-redis/0
 
   penpot-postgres:
-    image: "postgres:15"
+    image: "postgres:16.1-alpine"
+    restart: unless-stopped
     stop_signal: SIGINT
 
     volumes:
-      - penpot_postgres_v15:/var/lib/postgresql/data
+      - penpot_postgres_data:/var/lib/postgresql/data
 
     networks:
       - penpot
@@ -245,9 +247,8 @@ services:
       - POSTGRES_PASSWORD=penpot
 
   penpot-redis:
-    image: redis:7
-    volumes:
-      - penpot_redis:/data
+    image: redis:7.2.4-alpine
+    restart: unless-stopped
     networks:
       - penpot
 
@@ -257,6 +258,7 @@ services:
 
   penpot-mailcatch:
     image: sj26/mailcatcher:latest
+    restart: unless-stopped
     expose:
       - '1025'
     ports:
@@ -270,7 +272,7 @@ services:
   # minio:
   #   image: "minio/minio:latest"
   #   command: minio server /mnt/data --console-address ":9001"
-  #   restart: always
+  #   restart: unless-stopped
   #
   #   volumes:
   #     - "penpot_minio:/mnt/data"
