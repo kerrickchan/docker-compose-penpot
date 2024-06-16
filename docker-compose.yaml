@@ -1,12 +1,13 @@
 ---
-version: "3.5"
+version: "3.8"
 
 networks:
   penpot:
 
 volumes:
-  penpot_postgres_data:
+  penpot_postgres_v15:
   penpot_assets:
+  penpot_redis:
   # penpot_traefik:
   # penpot_minio:
 
@@ -93,7 +94,7 @@ services:
       ## You can read more about all available flags on:
       ## https://help.penpot.app/technical-guide/configuration/#advanced-configuration
 
-      - PENPOT_FLAGS=disable-registration disable-login-with-password
+      - PENPOT_FLAGS=enable-registration enable-login-with-password
 
   penpot-backend:
     image: "penpotapp/backend:latest"
@@ -137,7 +138,7 @@ services:
       ## environment variables for the backend here:
       ## https://help.penpot.app/technical-guide/configuration/#advanced-configuration
 
-      - PENPOT_FLAGS=disable-registration disable-login-with-password disable-email-verification disable-smtp enable-prepl-server enable-insecure-register disable-secure-session-cookies
+      - PENPOT_FLAGS=enable-registration enable-login-with-password disable-email-verification disable-smtp enable-prepl-server enable-insecure-register disable-secure-session-cookies
 
       ## Penpot SECRET KEY. It serves as a master key from which other keys for subsystems
       ## (eg http sessions, or invitations) are derived.
@@ -230,12 +231,12 @@ services:
       - PENPOT_REDIS_URI=redis://penpot-redis/0
 
   penpot-postgres:
-    image: "postgres:16.1-alpine"
+    image: "postgres:15-alpine"
     restart: unless-stopped
     stop_signal: SIGINT
 
     volumes:
-      - penpot_postgres_data:/var/lib/postgresql/data
+      - penpot_postgres_v15:/var/lib/postgresql/data
 
     networks:
       - penpot
@@ -247,10 +248,12 @@ services:
       - POSTGRES_PASSWORD=penpot
 
   penpot-redis:
-    image: redis:7.2.4-alpine
+    image: redis:7.2-alpine
     restart: unless-stopped
     networks:
       - penpot
+    volumes:
+      - penpot_redis:/data
 
   ## A mailcatch service, used as temporal SMTP server. You can access via HTTP to the
   ## port 1080 for read all emails the penpot platform has sent. Should be only used as a
